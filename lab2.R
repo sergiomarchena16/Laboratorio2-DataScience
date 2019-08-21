@@ -3,7 +3,9 @@
 
 
 # -------------------------------------------------- AVANCE ----------------------------------------------------
-
+install.packages("caret")
+library(caret)
+library(dplyr)
 datos<-read.csv("train.csv")
 
 
@@ -27,4 +29,74 @@ testSet<-datos[-muestra,]
 
 # 2. MODELO DE REGRESION LINEAL
 
+#--- SIMPLE
+
+trainSet$GarageCars
+#Generacion del Modelo Lineal
+modeloLinealSimple<-lm(SalePrice~OverallQual,GarageArea,GrLivArea, data = trainSet)
+summary(modeloLinealSimple)
+
+#Prediccion
+prediccion<-predict(modeloLinealSimple, newdata = testSet[2:80], type = "response")
+prediccion
+as.factor(prediccion)
+
+# Se agrega la prediccion al conjunto de test
+testSet$SalePred<-prediccion
+View(testSet[81:82])
+
+#Ver la diferencia entre lo real y lo predicho
+dif<-abs(testSet$SalePred-testSet$SalePrice)
+View(dif)
+
+promedioError<- mean(dif)
+summary(dif)
+promedioError
+
+# Matriz de Confusion
+
+real<-as.factor(testSet$SalePrice)
+str(real)
+prede<-as.factor(testSet$SalePred)
+str(prede)
+cfm<-confusionMatrix(real,prede)
+cfm
+
+testSet$SalePred <-NULL
+
+#--- MULTIVARIADA
+
+#Generacion del Modelo Lineal Multivariado
+nums<-dplyr::select_if(trainSet, is.numeric)   #SOLO VARIABLES NUMERICAS
+modeloLinealMulti<-lm(SalePrice~., data = nums)
+View(modeloLinealMulti)
+
+#Prediccion
+prediccion<-predict(modeloLinealMulti,newdata = testSet[1:80])
+prediccion
+
+# Se agrega la prediccion al conjunto de test
+testSet$SalePred<-prediccion
+View(testSet[81:82])
+
+#Ver la diferencia entre lo real y lo predicho
+dif<-abs(testSet$SalePred-testSet$SalePrice)
+View(dif)
+
+promedioError<- mean(dif)
+promedioError
+
+# Matriz de Confusion
+
+real<-as.integer(testSet$SalePrice)
+str(real)
+
+prede<-as.integer(testSet$SalePred)
+str(prede)
+cfm<-confusionMatrix(as.factor(real),as.factor(prede))
+cfm
+
+testSet$SalePred <-NULL
+
+# ---------------------------------------------- FIN DE AVANCE ----------------------------------------------------
 
